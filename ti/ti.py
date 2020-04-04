@@ -51,7 +51,7 @@ import sys
 import numpy as np
 
 
-HARTREE2EV = 27.2114
+HARTREE_TO_EV = 27.2114
 
 def get_homo_number(log_file, program):
     n = 0
@@ -249,15 +249,15 @@ def compute_ti(mo_i_a, mo_j_b, outfile,
 
     # <Ca|F|Ca>
     Ea = Ca*F[:n,:n]*CaT
-    Ea *= HARTREE2EV
+    Ea *= HARTREE_TO_EV
 
     # <Cb|F|Cb>
     Eb = Cb*F[n:,n:]*CbT
-    Eb *= HARTREE2EV
+    Eb *= HARTREE_TO_EV
 
     # <Ca|F|Cb>
     Eab = Ca*F[:n,n:]*CbT
-    Eab *= HARTREE2EV
+    Eab *= HARTREE_TO_EV
 
     print2('TRANSFER INTEGRAL:')
     print2('  %-6s %-6s' % ('MO(A)', 'MO(B)'))

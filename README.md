@@ -1,46 +1,44 @@
 # Transfer Integral
 
-Compute the transfer integral between molecular orbitals (MOs) {i} on
-monomer A and MOs {j} on monomer B.
+`ti` is a program that calculates the transfer integral between the molecular
+orbitals (MOs) {i} on monomer A and {j} on monomer B.
 
-If {i} and {j} are not specified, the default values are the HOMO (H) and
-LUMO (L) on A and B. Valid MO names are e.g. "H", "L", "H-1" and "L+2", etc.
-Multiple values can be specified using a comma e.g. "H-1,H,L,L+2"
+It takes in an YAML input file that specifies all the necessary log and output
+files from a QM calculation, such as those from Gaussian09.
 
-The required fields in the input file are:
-    - program:        software that was used for the QM calculations
-    - fock:           file containing fock matrix elements
-    - overlap:        file containing overlap matrix elements
-    - mo_a:           file containing MO coefficients of monomer A
-    - mo_b:           file containing MO coefficients of monomer B
-    - mo_type:        file type of the MO coefficients files
-    - log_a:          log file from monomer A calculation
-    - log_b:          log file from monomer B calculation
+Usage:
+```
+ti in/A_B_0.yaml -o out/A_B_0.out
+```
 
-The overlap values are determined from: Sij = <Ca_i|O|Cb_j>, where O is the
-overlap matrix and Ca_i and Cb_j are the matrices containing the MO coefficients
-of monomers A and B, respectively.
+Output:
+```
+INPUT FILES:
+  Fock matrix = dim/A_B_0.fm
+  Overlap matrix = dim/A_B_0.om
+  Mon. A MOs = mon/A.mo
+  Mon. A log = mon/A.log
+  Mon. B MOs = mon/B_0.mo
+  Mon. B log = mon/B_0.log
 
-Likewise, the energy values are determined using the Fock matrix:
-    - Ei        = <Ca_i|F|Ca_i>
-    - Ej        = <Cb_j|F|Cb_j>
-    - Jij (Eij) = <Ca_i|F|Cb_j>
+MONOMER A:
+  No. of MOs = 46
+  HOMO = 8 ; LUMO = 9
 
-    NOTE: Ca is an [n, n] matrix and Cb is an [m, m] matrix, where n and m
-          are the no. of MO coefficients of monomers A and B, respectively.
-          O and F, however, are [n+m, n+m] matrices. Therefore, only a subset
-          of those matrices are used in computing Ei, Ej, Sij, Jij, etc.
+MONOMER B:
+  No. of MOs = 46
+  HOMO = 8 ; LUMO = 9
 
-          E.g., in Ei = <Ca_i|F|Ca_i>,
-                the F is actually F[:n,:n]
+TRANSFER INTEGRAL:
+  MO(A)  MO(B)
+  i      j           Sij    Ei [eV]    Ej [eV]  Jij [meV]  Ei_eff [eV]  Ej_eff [eV]  Jij_eff [meV]
+  H      H      -0.02422   -7.43996   -7.43996    236.467     -7.43860     -7.43860         56.306
+  H      L      -0.00000   -7.43996   -0.22039      0.000     -7.43996     -0.22039         -0.000
+  L      H      -0.00000   -0.22039   -7.43996      0.000     -0.22039     -7.43996          0.000
+  L      L      -0.10621   -0.22039   -0.22039    164.697     -0.20521     -0.20521        142.901
+```
 
-                in Ej = <Cb_j|F|Cb_j>,
-                the F is actually F[n:,n:]
-
-                in Jij = <Ca_i|F|Cb_j>,
-                the F is actually F[:n,n:]
-
-Using Sij, Ei, Ej, Jij from above, the transfer integral (Jij_eff) is
-calculated from:
-
-    Jij_eff = (Jij - 0.5*(Ei+Ej)*Sij) / (1 - Sij*Sij)
+Included in this repo is an example set of calculations for the ethylene (H2C=CH2)
+dimer, where the monomers are rotated from 0 to 90 degress w.r.t. each other.
+Monomer and dimer calculations are in `/mon` and `/dim`, respectively.
+Input and output files for `ti` are in `/in` and `/out`, respectively.
