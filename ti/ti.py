@@ -19,13 +19,13 @@ The overlap values are determined from: Sij = <Ca_i|O|Cb_j>, where O is the
 overlap matrix and Ca_i and Cb_j are the matrices containing the MO coefficients
 of monomers A and B, respectively.
 
-Likewise, the energy values are determined (using the Fock matrix) from:
+Likewise, the energy values are determined using the Fock matrix:
     - Ei        = <Ca_i|F|Ca_i>
     - Ej        = <Cb_j|F|Cb_j>
     - Jij (Eij) = <Ca_i|F|Cb_j>
 
     NOTE: Ca is an [n, n] matrix and Cb is an [m, m] matrix, where n and m
-          are the no. of MO coeffs. of mons. A and B, respectively.
+          are the no. of MO coefficients of monomers A and B, respectively.
           O and F, however, are [n+m, n+m] matrices. Therefore, only a subset
           of those matrices are used in computing Ei, Ej, Sij, Jij, etc.
 
@@ -38,8 +38,8 @@ Likewise, the energy values are determined (using the Fock matrix) from:
                 in Jij = <Ca_i|F|Cb_j>,
                 the F is actually F[:n,n:]
 
-Using Sij, Ei, Ej, Jij from above, the transfer integral (Jij_eff) between
-i on monomer A and j on monomer B is determined from:
+Using Sij, Ei, Ej, Jij from above, the transfer integral (Jij_eff) is
+calculated from:
 
     Jij_eff = (Jij - 0.5*(Ei+Ej)*Sij) / (1 - Sij*Sij)
 """
