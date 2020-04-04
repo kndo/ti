@@ -21,13 +21,11 @@ def valid_inputs(inputs):
     }, extra=REMOVE_EXTRA)
 
     try:
-        inputs = schema(inputs)
+        schema(inputs)
     except Invalid as err:
         err_path = [str(i) for i in err.path]
         print(f'Invalid field in input file: {err.msg} ({".".join(err_path)}).')
         sys.exit(1)
-
-    return inputs
 
 
 def valid_mo(mo):
