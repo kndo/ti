@@ -5,9 +5,9 @@ import os
 import click
 import yaml
 
+from .ti import compute_ti
 from .validate import valid_inputs
 from .validate import valid_mo
-from .ti import compute_ti
 
 
 @click.command()
