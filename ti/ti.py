@@ -1,4 +1,6 @@
 import itertools
+import os
+import sys
 
 import numpy as np
 
@@ -37,15 +39,6 @@ def get_mo_number(mo_name, homo_number):
     return n
 
 
-def grouper(line, nchars):
-    it = iter(line)
-    while True:
-       chunk = tuple(itertools.islice(it, nchars))
-       if not chunk:
-           return
-       yield ''.join(chunk)
-
-
 def get_mo_coeffs(mo_file, mo_file_type, program):
     n_mo = 0
     coeffs = []
@@ -56,7 +49,7 @@ def get_mo_coeffs(mo_file, mo_file_type, program):
 
             if mo_file_type == 'punch':
                 n_coeffs_per_line = 5
-                coeff_len = 15  # characters; Use b/c no separation between coeffs
+                coeff_len = 15  # characters; use b/c no separation between coeffs
 
                 for line in f.readlines()[1:]:  # Ignore first line
                     if 'Alpha MO' in line:
@@ -137,38 +130,67 @@ def get_interaction_matrix(matrix_file, n_mo_a, n_mo_b, program):
 #     return sign
 
 
-def compute_ti(mo_i_a, mo_j_b,
+def compute_ti(mo_i_a, mo_j_b, outfile,
                program, fock, overlap, mo_a, mo_b, mo_type, log_a, log_b):
+
+    if os.path.isfile(outfile):
+        print('Outfile %s already exists. Delete [y/n]?' % outfile)
+        ans = sys.stdin.readline()
+        if not ans.startswith('y'):
+            print('Exiting ...')
+            sys.exit(1)
+        print('')
+
+    fout = open(outfile, 'w')
+
+    def print2(line):
+        print(line)
+        print(line, file=fout)
+
+    print2('INPUT FILES:')
+    print2('  Fock matrix = %s' % fock)
+    print2('  Overlap matrix = %s' % overlap)
+    print2('  Mon. A MOs = %s' % mo_a)
+    print2('  Mon. A log = %s' % log_a)
+    print2('  Mon. B MOs = %s' % mo_b)
+    print2('  Mon. B log = %s' % log_b)
+    print2('')
 
     n_homo_a = get_homo_number(log_a, program)
     n_homo_b = get_homo_number(log_b, program)
 
     mo_i_a = mo_i_a.split(',')
-    mo_i_a = sorted(mo_i_a, reverse=True)
-
     mo_j_b = mo_j_b.split(',')
-    mo_j_b = sorted(mo_j_b)
 
-    map_a = {}
-    mo_num_i_a = []
+    mo_name_a = {}
+    mo_num_a = []
     for name in mo_i_a:
         num = get_mo_number(name, n_homo_a)
-        map_a[num] = name
-        mo_num_i_a.append(num)
+        mo_name_a[num] = name
+        mo_num_a.append(num)
 
-    map_b = {}
-    mo_num_j_b = []
+    mo_name_b = {}
+    mo_num_b = []
     for name in mo_j_b:
         num = get_mo_number(name, n_homo_b)
-        map_b[num] = name
-        mo_num_j_b.append(num)
-
+        mo_name_b[num] = name
+        mo_num_b.append(num)
 
     Ca = get_mo_coeffs(mo_a, mo_type, program)
     Cb = get_mo_coeffs(mo_b, mo_type, program)
 
     n = len(Ca)
     m = len(Cb)
+
+    print2('MONOMER A:')
+    print2('  No. of MOs = %d' % n)
+    print2('  HOMO = %d ; LUMO = %d' % (n_homo_a, n_homo_a+1))
+    print2('')
+
+    print2('MONOMER B:')
+    print2('  No. of MOs = %d' % m)
+    print2('  HOMO = %d ; LUMO = %d' % (n_homo_b, n_homo_b+1))
+    print2('')
 
     F = get_interaction_matrix(fock, n, m, program)
     O = get_interaction_matrix(overlap, n, m, program)
@@ -191,11 +213,16 @@ def compute_ti(mo_i_a, mo_j_b,
     Eab = Ca*F[:n,n:]*CbT
     Eab *= HARTREE2EV
 
+    print2('TRANSFER INTEGRAL:')
+    print2('  %-6s %-6s' % ('MO(A)', 'MO(B)'))
+    print2('  %-6s %-6s %8s %10s %10s %10s %12s %12s %14s' % \
+           ('i', 'j', 'Sij', 'Ei [eV]', 'Ej [eV]', 'Jij [meV]', 'Ei_eff [eV]', 'Ej_eff [eV]', 'Jij_eff [meV]'))
+
     # Use dummy vars p and q, b/c matrices start at index 0
-    for p in mo_num_i_a:
+    for p in mo_num_a:
         i = p - 1
 
-        for q in mo_num_j_b:
+        for q in mo_num_b:
             j = q - 1
 
             Sij = Sab[i,j]
@@ -208,5 +235,16 @@ def compute_ti(mo_i_a, mo_j_b,
 
             Jij_eff = (Jij - 0.5*(Ei+Ej)*Sij)/(1-Sij*Sij)
 
-            print('%-6s %-6s %8.5f %10.5f %10.5f %10.3f %12.5f %12.5f %14.3f' \
-               % (map_a[p], map_b[q], Sij, Ei, Ej, Jij*1e3, Ei_eff, Ej_eff, Jij_eff*1e3))
+            print2('  %-6s %-6s %8.5f %10.5f %10.5f %10.3f %12.5f %12.5f %14.3f' % \
+                   (mo_name_a[p], mo_name_b[q], Sij, Ei, Ej, Jij*1e3, Ei_eff, Ej_eff, Jij_eff*1e3))
+
+    print2('')
+
+
+def grouper(line, nchars):
+    it = iter(line)
+    while True:
+       chunk = tuple(itertools.islice(it, nchars))
+       if not chunk:
+           return
+       yield ''.join(chunk)

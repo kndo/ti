@@ -1,0 +1,24 @@
+INPUT FILES:
+  Fock matrix = dim/A_B_90.fm
+  Overlap matrix = dim/A_B_90.om
+  Mon. A MOs = mon/A.mo
+  Mon. A log = mon/A.log
+  Mon. B MOs = mon/B_90.mo
+  Mon. B log = mon/B_90.log
+
+MONOMER A:
+  No. of MOs = 46
+  HOMO = 8 ; LUMO = 9
+
+MONOMER B:
+  No. of MOs = 46
+  HOMO = 8 ; LUMO = 9
+
+TRANSFER INTEGRAL:
+  MO(A)  MO(B) 
+  i      j           Sij    Ei [eV]    Ej [eV]  Jij [meV]  Ei_eff [eV]  Ej_eff [eV]  Jij_eff [meV]
+  H      H       0.00000   -7.56116   -7.43468     -0.000     -7.56116     -7.43468          0.000
+  H      L      -0.00000   -7.56116   -0.20317      0.000     -7.56116     -0.20317          0.000
+  L      H       0.00000   -0.35986   -7.43468      0.000     -0.35986     -7.43468          0.000
+  L      L      -0.00000   -0.35986   -0.20317     -0.000     -0.35986     -0.20317         -0.000
+

@@ -8,7 +8,7 @@ from voluptuous import REMOVE_EXTRA
 from voluptuous import Schema
 
 
-def validate(inputs):
+def valid_inputs(inputs):
     schema = Schema({
         Required('program'): Any('g09'),
         Required('fock'): IsFile(),
@@ -28,3 +28,11 @@ def validate(inputs):
         sys.exit(1)
 
     return inputs
+
+
+def valid_mo(mo):
+    mos = mo.split(',')
+
+    for mo in mos:
+        # TODO: Use regex to check that MO is 'H-n' or 'L+m'
+        pass

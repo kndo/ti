@@ -1,58 +1,55 @@
 #!/usr/bin/env python
 
+import os
+
 import click
 import yaml
 
-from .inputs import validate
+from .validate import valid_inputs
+from .validate import valid_mo
 from .ti import compute_ti
-from .ti import get_homo_number
-from .ti import get_interaction_matrix
-from .ti import get_mo_coeffs
-from .ti import get_mo_number
 
 
 @click.command()
 @click.argument(
     'infile',
-    type=click.Path(exists=True)
+    type=click.Path(exists=True),
 )
 @click.option(
     '-o',
     '--outfile',
     type=click.Path(),
-    help='Output file'
-)
-@click.option(
-    '--outfile-format',
-    type=click.Choice(['log', 'json', 'yaml'], case_sensitive=False),
-    default='log',
-    help='Output file format'
+    help='Output file',
 )
 @click.option(
     '-a',
     'mo_i_a',
     default='H,L',
-    help='Molecular orbital(s) on molecule A'
+    help='Molecular orbital(s) on monomer A',
 )
 @click.option(
     '-b',
     'mo_j_b',
     default='H,L',
-    help='Molecular orbital(s) on molecule B'
+    help='Molecular orbital(s) on monomer B',
 )
-def main(infile, outfile, outfile_format, mo_i_a, mo_j_b):
+def main(infile, outfile, mo_i_a, mo_j_b):
 
     with open(infile) as f:
         inputs = yaml.load(f, Loader=yaml.FullLoader)
-    validate(inputs)
-    # validate_mo(mo_i_a)
-    # validate_mo(mo_j_b)
 
-    # ti = TransferIntegral(**inputs)
-    # ti.compute(mo_i_a, mo_j_b)
-    # ti.write(output)
+    # TODO: Make all error message uniform
+    valid_inputs(inputs)
+    valid_mo(mo_i_a)
+    valid_mo(mo_j_b)
 
-    compute_ti(mo_i_a, mo_j_b, **inputs)
+    if not outfile:
+        basename = os.path.basename(infile)
+        cols = basename.split('.')[:-1]
+        rootname = '.'.join(cols)
+        outfile = rootname + '.out'
+
+    compute_ti(mo_i_a, mo_j_b, outfile, **inputs)
 
 
 if __name__ == '__main__':
