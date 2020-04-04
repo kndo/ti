@@ -1,0 +1,7 @@
+__title__ = 'ti'
+__description__ = ''
+__url__ = ''
+__version__ = '0.1.0'
+__author__ = 'Khanh Do'
+__author_email__ = 'dokhanh@gmail.com'
+__license__ = ''

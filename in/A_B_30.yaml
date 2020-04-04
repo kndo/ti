@@ -1,0 +1,8 @@
+program:  g09
+fock:     dim/A_B_30.fm
+overlap:  dim/A_B_30.om
+mo_a:     mon/A.mo
+mo_b:     mon/B_30.mo
+mo_type:  punch
+log_a:    mon/A.log
+log_b:    mon/B_30.log
