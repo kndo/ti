@@ -3,7 +3,7 @@ monomer A and MOs {j} on monomer B.
 
 If {i} and {j} are not specified, the default values are the HOMO (H) and
 LUMO (L) on A and B. Valid MO names are e.g. "H", "L", "H-1" and "L+2", etc.
-Multiple values can be specified using a comma e.g. "H-1,H,L,L+2"
+Multiple values are specified using a comma with no spaces, e.g. "H-1,H,L,L+2".
 
 The required fields in the input file are:
     - program:        software that was used for the QM calculations
@@ -24,19 +24,20 @@ Likewise, the energy values are determined using the Fock matrix:
     - Ej        = <Cb_j|F|Cb_j>
     - Jij (Eij) = <Ca_i|F|Cb_j>
 
-    NOTE: Ca is an [n, n] matrix and Cb is an [m, m] matrix, where n and m
-          are the no. of MO coefficients of monomers A and B, respectively.
-          O and F, however, are [n+m, n+m] matrices. Therefore, only a subset
-          of those matrices are used in computing Ei, Ej, Sij, Jij, etc.
+NB: Ca is an [n, n] matrix and Cb is an [m, m] matrix, where n and m are the
+    no. of MO coefficients of monomers A and B, respectively. O and F, however,
+    are [n+m, n+m] matrices. Therefore, only a subset of those matrices are used
+    in computing Ei, Ej, Sij, Jij, etc.
 
-          E.g., in Ei = <Ca_i|F|Ca_i>,
-                the F is actually F[:n,:n]
+    For example:
+        in Ei = <Ca_i|F|Ca_i>,
+        the F is actually F[:n,:n]
 
-                in Ej = <Cb_j|F|Cb_j>,
-                the F is actually F[n:,n:]
+        in Ej = <Cb_j|F|Cb_j>,
+        the F is actually F[n:,n:]
 
-                in Jij = <Ca_i|F|Cb_j>,
-                the F is actually F[:n,n:]
+        in Jij = <Ca_i|F|Cb_j>,
+        the F is actually F[:n,n:]
 
 Using Sij, Ei, Ej, Jij from above, the transfer integral (Jij_eff) is
 calculated from:
@@ -176,6 +177,27 @@ def get_interaction_matrix(matrix_file, n_mo_a, n_mo_b, program):
 #     return sign
 
 
+output_template = """INPUT FILES:
+  Fock matrix = {fock}
+  Overlap matrix = {overlap}
+  Mon. A MOs = {mo_a}
+  Mon. A log = {log_a}
+  Mon. B MOs = {mo_b}
+  Mon. B log = {log_b}
+
+MONOMER A:
+  No. of MOs = {n_mo_a}
+  HOMO = {n_homo_a} ; LUMO = {n_lumo_a}
+
+MONOMER B:
+  No. of MOs = {n_mo_b}
+  HOMO = {n_homo_b} ; LUMO = {n_lumo_b}
+
+TRANSFER INTEGRAL:
+  MO(A)  MO(B)
+  i      j           Sij    Ei [eV]    Ej [eV]  Jij [meV]  Ei_eff [eV]  Ej_eff [eV]  Jij_eff [meV]"""
+
+
 def compute_ti(mo_i_a, mo_j_b, outfile,
                program, fock, overlap, mo_a, mo_b, mo_type, log_a, log_b):
 
@@ -192,15 +214,6 @@ def compute_ti(mo_i_a, mo_j_b, outfile,
     def print2(line):
         print(line)
         print(line, file=fout)
-
-    print2('INPUT FILES:')
-    print2('  Fock matrix = %s' % fock)
-    print2('  Overlap matrix = %s' % overlap)
-    print2('  Mon. A MOs = %s' % mo_a)
-    print2('  Mon. A log = %s' % log_a)
-    print2('  Mon. B MOs = %s' % mo_b)
-    print2('  Mon. B log = %s' % log_b)
-    print2('')
 
     n_homo_a = get_homo_number(log_a, program)
     n_homo_b = get_homo_number(log_b, program)
@@ -228,16 +241,6 @@ def compute_ti(mo_i_a, mo_j_b, outfile,
     n = len(Ca)
     m = len(Cb)
 
-    print2('MONOMER A:')
-    print2('  No. of MOs = %d' % n)
-    print2('  HOMO = %d ; LUMO = %d' % (n_homo_a, n_homo_a+1))
-    print2('')
-
-    print2('MONOMER B:')
-    print2('  No. of MOs = %d' % m)
-    print2('  HOMO = %d ; LUMO = %d' % (n_homo_b, n_homo_b+1))
-    print2('')
-
     F = get_interaction_matrix(fock, n, m, program)
     O = get_interaction_matrix(overlap, n, m, program)
 
@@ -259,10 +262,21 @@ def compute_ti(mo_i_a, mo_j_b, outfile,
     Eab = Ca*F[:n,n:]*CbT
     Eab *= HARTREE_TO_EV
 
-    print2('TRANSFER INTEGRAL:')
-    print2('  %-6s %-6s' % ('MO(A)', 'MO(B)'))
-    print2('  %-6s %-6s %8s %10s %10s %10s %12s %12s %14s' % \
-           ('i', 'j', 'Sij', 'Ei [eV]', 'Ej [eV]', 'Jij [meV]', 'Ei_eff [eV]', 'Ej_eff [eV]', 'Jij_eff [meV]'))
+    output = output_template.format(
+        fock=fock,
+        overlap=overlap,
+        mo_a=mo_a,
+        mo_b=mo_b,
+        log_a=log_a,
+        log_b=log_b,
+        n_mo_a=n,
+        n_mo_b=m,
+        n_homo_a=n_homo_a,
+        n_lumo_a=n_homo_a+1,
+        n_homo_b=n_homo_b,
+        n_lumo_b=n_homo_b+1,
+    )
+    print2(output)
 
     # Use dummy vars p and q, b/c matrices start at index 0
     for p in mo_num_a:
